@@ -886,18 +886,28 @@ class MusicGeneratorApp(QMainWindow):
             return # No valid audio data
 
         # Mix audio data
-        mixed_audio = np.zeros(max_len)
+        mixed_audio = np.zeros(max_len, dtype=np.float32)
         for data in audio_data_list:
-            if data is not None:
-                # Pad shorter sounds with zeros
-                padded_data = np.pad(data, (0, max_len - len(data)), 'constant')
-                mixed_audio += padded_data
+            if data is None:
+                continue
+
+            if len(data) == 0:
+                continue
+
+            if data.dtype != np.float32:
+                data = data.astype(np.float32, copy=False)
+
+            mix_len = min(len(data), max_len)
+            mixed_audio[:mix_len] += data[:mix_len]
 
         # Normalize mixed audio to prevent clipping, if sum exceeds 1.0
         max_abs_val = np.max(np.abs(mixed_audio))
         if max_abs_val > 1.0:
             mixed_audio /= max_abs_val
-        
+
+        # Ensure final buffer stays within [-1.0, 1.0]
+        mixed_audio = np.clip(mixed_audio, -1.0, 1.0)
+
         # Convert to 16-bit PCM
         samples_16bit = (mixed_audio * 32767).astype(np.int16)
 
@@ -1147,7 +1157,7 @@ class MusicGeneratorApp(QMainWindow):
                 fade_in_s = settings['fade_in'] / 1000.0
                 fade_out_s = settings['fade_out'] / 1000.0
 
-                voice_audio_data = np.zeros(int(self.sample_rate * (duration_s + delay_s)))
+                voice_audio_data = np.zeros(int(self.sample_rate * (duration_s + delay_s)), dtype=np.float32)
                 
                 for freq in frequencies:
                     note_audio = generate_waveform(
