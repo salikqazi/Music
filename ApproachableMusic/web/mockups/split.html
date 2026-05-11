@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mockup C · Split Panel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --panel:       #eeeef2;
+  --panel-light: #ffffff;
+  --panel-edge:  #d0d0da;
+  --engrave:     #1a1a2e;
+  --engrave-dim: rgba(26,26,46,0.55);
+  --phos-bg:     #0d1a0d;
+  --phos-fg:     #44ff88;
+  --phos-dim:    #22993a;
+  --border:      rgba(0,0,0,0.12);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  background: var(--panel);
+  color: var(--engrave);
+  font-family: 'DM Mono', monospace;
+  display: flex; flex-direction: column;
+  min-height: 100vh;
+  padding: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+  background-size: 180px;
+}
+
+/* Nameplate */
+.nameplate {
+  display: flex; justify-content: space-between; align-items: center;
+  background: var(--panel-light); border-bottom: 1px solid var(--border);
+  padding: 7px 16px; flex-shrink: 0;
+}
+.brand { font-size: 9px; letter-spacing: 4px; text-transform: uppercase; opacity: 0.4; font-weight: 500; }
+.tag   { font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: var(--phos-fg);
+         background: var(--phos-bg); padding: 3px 10px; border-radius: 3px; font-family: 'Share Tech Mono'; }
+
+/* Split body */
+.body-split {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  min-height: 0;
+}
+
+/* Panel shared */
+.panel-half {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+}
+.panel-half.left  { border-right: 2px solid var(--border); }
+
+.panel-section-label {
+  font-size: 7.5px; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--engrave-dim); display: flex; align-items: center; gap: 8px;
+}
+.panel-section-label::after {
+  content: ''; flex: 1; height: 1px;
+  background: linear-gradient(90deg, rgba(26,26,46,0.18), transparent);
+}
+
+/* ── Root selector (simplified key ring) ── */
+.root-ring {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 5px;
+}
+.root-btn {
+  background: var(--panel-light);
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 4px;
+  cursor: pointer; user-select: none; -webkit-user-select: none;
+  text-align: center; font-size: 11px; font-family: 'Share Tech Mono';
+  transition: background 0.08s, border-color 0.08s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.root-btn:hover { background: rgba(0,0,0,0.04); }
+.root-btn.on {
+  background: rgba(68,255,136,0.12);
+  border-color: rgba(68,255,136,0.5);
+  color: #0a5c20;
+}
+
+/* ── Degree pads ── */
+.deg-stack { display: flex; flex-direction: column; gap: 5px; }
+.deg-pad {
+  background: var(--panel-light);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 11px 14px;
+  cursor: pointer; user-select: none; -webkit-user-select: none;
+  display: flex; align-items: center; gap: 10px;
+  transition: background 0.08s, transform 0.06s, border-color 0.08s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.deg-pad:hover   { background: rgba(0,0,0,0.03); }
+.deg-pad.held    { background: rgba(68,255,136,0.12); border-color: rgba(68,255,136,0.5); transform: scale(0.99); }
+.deg-pad.playing { background: rgba(68,255,136,0.22); border-color: var(--phos-fg); }
+.dp-led   { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid; flex-shrink: 0; }
+.dp-text  { flex: 1; }
+.dp-roman { font-size: 14px; font-weight: 500; }
+.dp-mood  { font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: var(--engrave-dim); }
+.dp-note  { font-size: 9px; font-family: 'Share Tech Mono'; color: var(--phos-dim); margin-left: auto; }
+
+/* ── Quality grid ── */
+.qual-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 5px;
+}
+.qual-btn {
+  background: var(--panel-light);
+  border: 1.5px solid var(--border);
+  border-radius: 7px;
+  padding: 10px 10px;
+  cursor: pointer; user-select: none; -webkit-user-select: none;
+  display: flex; align-items: center; gap: 8px;
+  transition: background 0.08s, border-color 0.1s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.qual-btn:hover { background: rgba(0,0,0,0.03); }
+.qual-btn.on    { transform: scale(0.97); }
+.qb-dot  { width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid; flex-shrink: 0; }
+.qb-name { font-size: 11px; font-weight: 500; }
+
+/* ── Octave row ── */
+.oct-row {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.oct-btn {
+  background: var(--panel-light); border: 1.5px solid var(--border);
+  border-radius: 6px; padding: 7px 14px; font-size: 11px;
+  font-family: 'Share Tech Mono'; cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  transition: background 0.08s;
+}
+.oct-btn:hover { background: var(--panel-edge); }
+.oct-val {
+  font-size: 13px; font-family: 'Share Tech Mono'; font-weight: 500;
+  padding: 4px 12px;
+  background: var(--phos-bg);
+  color: var(--phos-fg); border-radius: 5px;
+  text-shadow: 0 0 6px rgba(68,255,136,0.4);
+}
+.oct-label { font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: var(--engrave-dim); }
+
+/* ── Extension row ── */
+.ext-row { display: flex; gap: 5px; flex-wrap: wrap; }
+.ext-btn {
+  background: var(--panel-light); border: 1.5px solid var(--border);
+  border-radius: 6px; padding: 7px 12px; font-size: 10px;
+  cursor: pointer; transition: background 0.08s, border-color 0.08s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.ext-btn:hover { background: rgba(0,0,0,0.04); }
+.ext-btn.on { background: rgba(99,102,241,0.10); border-color: rgba(99,102,241,0.4); color: #312e81; }
+
+/* ── Readout ── */
+.readout {
+  background: var(--phos-bg); border: 1px solid rgba(68,255,136,0.2);
+  border-radius: 6px; padding: 8px 14px;
+  display: flex; gap: 20px; align-items: center;
+  box-shadow: inset 0 0 12px rgba(0,0,0,0.5), 0 0 6px rgba(68,255,136,0.04);
+  flex-shrink: 0;
+}
+.ro-cell { display: flex; flex-direction: column; gap: 1px; }
+.ro-label { font-size: 7px; letter-spacing: 2px; color: var(--phos-dim); text-transform: uppercase; }
+.ro-val   { font-size: 14px; font-family: 'Share Tech Mono'; color: var(--phos-fg);
+            text-shadow: 0 0 8px rgba(68,255,136,0.4); }
+
+/* ── Nav footer ── */
+.nav-bar {
+  border-top: 1px solid var(--border);
+  background: var(--panel-light);
+  padding: 8px 14px; display: flex; gap: 8px; align-items: center; flex-shrink: 0;
+}
+.nav-bar a {
+  font-size: 8px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--engrave-dim); text-decoration: none;
+  border: 1px solid var(--border); padding: 5px 14px;
+  border-radius: 4px; background: var(--panel);
+}
+.nav-bar a:hover { background: var(--panel-edge); }
+.nav-bar a.on { border-color: rgba(68,255,136,0.45); color: #0a5c20; background: rgba(68,255,136,0.08); }
+.nav-bar .hint-right {
+  margin-left: auto; font-size: 7.5px; letter-spacing: 1.5px;
+  color: var(--engrave-dim); text-transform: uppercase;
+}
+.nav-bar .hint-right em { color: var(--phos-fg); font-style: normal; }
+</style>
+</head>
+<body>
+
+<div class="nameplate">
+  <span class="brand">Approachable Music</span>
+  <span class="tag">MOCKUP C · SPLIT PANEL</span>
+</div>
+
+<!-- Readout bar -->
+<div class="readout" style="margin:8px 14px 0; border-radius:6px;">
+  <div class="ro-cell"><span class="ro-label">Root</span><span class="ro-val" id="roRoot">C</span></div>
+  <div class="ro-cell"><span class="ro-label">Chord</span><span class="ro-val" id="roChord">—</span></div>
+  <div class="ro-cell"><span class="ro-label">Quality</span><span class="ro-val" id="roQual">—</span></div>
+  <div class="ro-cell"><span class="ro-label">Notes</span><span class="ro-val" id="roNotes" style="font-size:11px">—</span></div>
+</div>
+
+<!-- Split body -->
+<div class="body-split">
+
+  <!-- ── LEFT: Root + Degree ── -->
+  <div class="panel-half left">
+
+    <div class="panel-section-label">Key / Root</div>
+    <div class="root-ring" id="rootRing"></div>
+
+    <div class="panel-section-label">Chord Degree</div>
+    <div class="deg-stack" id="degStack"></div>
+
+  </div>
+
+  <!-- ── RIGHT: Quality + Controls ── -->
+  <div class="panel-half">
+
+    <div class="panel-section-label">Quality Override</div>
+    <div class="qual-grid" id="qualGrid"></div>
+
+    <div class="panel-section-label">Octave</div>
+    <div class="oct-row">
+      <span class="oct-label">Oct</span>
+      <button class="oct-btn" id="octDn">−</button>
+      <span class="oct-val" id="octVal">4</span>
+      <button class="oct-btn" id="octUp">+</button>
+    </div>
+
+    <div class="panel-section-label">Extensions</div>
+    <div class="ext-row">
+      <button class="ext-btn" id="ext7">+ 7th</button>
+      <button class="ext-btn" id="ext9">+ 9th</button>
+      <button class="ext-btn" id="ext11">+ 11th</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- Nav footer -->
+<div class="nav-bar">
+  <a href="grid.html">A · Grid</a>
+  <a href="hold.html">B · Hold+Tap</a>
+  <a class="on" href="split.html">C · Split Panel</a>
+  <span class="hint-right"><em>LEFT HAND</em> = root + degree &nbsp;·&nbsp; <em>RIGHT HAND</em> = quality + controls</span>
+</div>
+
+<script>
+const CIRCLE_ORDER = ['C','G','D','A','E','B','F#','Db','Ab','Eb','Bb','F'];
+const NOTE_MIDI    = {C:60,G:67,D:62,A:69,E:64,B:71,'F#':66,'Db':61,'Ab':68,'Eb':63,'Bb':70,F:65};
+const NOTE_NAMES   = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+
+const MOODS   = ['HOME','YEARN','DREAM','LIFT','PULL','ACHE','EDGE'];
+const AUTO_Q  = ['major','minor','minor','major','dominant','minor','diminished'];
+const ROMANS  = ['I','ii','iii','IV','V','vi','vii°'];
+const QCOLOR  = {
+  major:'#22c55e', minor:'#ca8a04', dominant:'#fb923c',
+  diminished:'#f97316', augmented:'#a855f7',
+};
+
+const QUALITIES = [
+  { key:'auto', label:'AUTO',  color:'#44ff88' },
+  { key:'maj',  label:'maj',   color:'#22c55e' },
+  { key:'min',  label:'min',   color:'#ca8a04' },
+  { key:'7',    label:'7',     color:'#fb923c' },
+  { key:'maj7', label:'maj7',  color:'#4ade80' },
+  { key:'min7', label:'min7',  color:'#d97706' },
+  { key:'sus4', label:'sus4',  color:'#94a3b8' },
+  { key:'add9', label:'add9',  color:'#34d399' },
+  { key:'dim',  label:'dim',   color:'#f97316' },
+  { key:'aug',  label:'aug',   color:'#a855f7' },
+];
+
+const IONIAN_IVS = [0,2,4,5,7,9,11];
+const AUTO_IV    = [[0,4,7],[0,3,7],[0,3,7],[0,4,7],[0,4,7],[0,3,7],[0,3,6]];
+const QUAL_IV    = {
+  maj:[0,4,7], min:[0,3,7], '7':[0,4,7,10],
+  maj7:[0,4,7,11], min7:[0,3,7,10], sus2:[0,2,7],
+  sus4:[0,5,7], add9:[0,4,7,14], dim:[0,3,6], aug:[0,4,8],
+};
+
+// ── State ────────────────────────────────────────────────
+let rootNote  = 'C';
+let currentOct  = 4;
+let latchQual = null;         // null = auto
+let extraTones  = new Set();  // '7','9','11'
+let heldDeg   = -1;
+let degEls = [], qualEls = [];
+
+// ── Audio ────────────────────────────────────────────────
+let actx = null, anodes = [];
+function ac() {
+  if (!actx) actx = new AudioContext();
+  if (actx.state === 'suspended') actx.resume();
+  return actx;
+}
+function chordOn(deg) {
+  chordOff();
+  const c = ac(), now = c.currentTime;
+  const rootMidi = NOTE_MIDI[rootNote] + (currentOct - 4) * 12;
+  const degRoot  = rootMidi + IONIAN_IVS[deg];
+  const qual     = latchQual !== null ? latchQual : 'auto';
+  const base     = qual === 'auto' ? AUTO_IV[deg] : (QUAL_IV[qual] || AUTO_IV[deg]);
+
+  // Add extensions
+  let ivs = [...base];
+  if (extraTones.has('7'))  { const iv = qual==='maj7'||qual==='min7' ? base.includes(11)?null:11 : 10; if(iv&&!ivs.includes(iv)) ivs.push(iv); }
+  if (extraTones.has('9'))  { if (!ivs.includes(14)) ivs.push(14); }
+  if (extraTones.has('11')) { if (!ivs.includes(17)) ivs.push(17); }
+
+  anodes = ivs.map(iv => {
+    const freq = 440 * Math.pow(2, (degRoot + iv - 69) / 12);
+    const osc  = c.createOscillator();
+    const env  = c.createGain();
+    osc.connect(env); env.connect(c.destination);
+    osc.type = 'triangle'; osc.frequency.value = freq;
+    env.gain.setValueAtTime(0, now);
+    env.gain.linearRampToValueAtTime(0.10, now + 0.025);
+    osc.start(now);
+    return { osc, env };
+  });
+
+  // Readout
+  const nnames = ivs.map(iv => NOTE_NAMES[(degRoot + iv) % 12]).join(' ');
+  document.getElementById('roChord').textContent = NOTE_NAMES[degRoot % 12] + (qual==='auto'?'':qual);
+  document.getElementById('roQual').textContent  = qual==='auto' ? AUTO_Q[deg] : qual;
+  document.getElementById('roNotes').textContent = nnames;
+}
+function chordOff() {
+  if (!anodes.length) return;
+  const c = ac(), now = c.currentTime;
+  anodes.forEach(({ osc, env }) => {
+    try {
+      env.gain.cancelScheduledValues(now);
+      env.gain.setValueAtTime(env.gain.value, now);
+      env.gain.linearRampToValueAtTime(0, now + 0.5);
+      osc.stop(now + 0.5);
+    } catch(_) {}
+  });
+  anodes = [];
+  document.getElementById('roChord').textContent = '—';
+  document.getElementById('roQual').textContent  = '—';
+  document.getElementById('roNotes').textContent = '—';
+}
+
+// ── Build root ring ──────────────────────────────────────
+function buildRootRing() {
+  const ring = document.getElementById('rootRing');
+  CIRCLE_ORDER.forEach(n => {
+    const b = document.createElement('div');
+    b.className = 'root-btn' + (n === 'C' ? ' on' : '');
+    b.textContent = n;
+    b.addEventListener('click', () => {
+      rootNote = n;
+      document.getElementById('roRoot').textContent = n;
+      ring.querySelectorAll('.root-btn').forEach(x => x.classList.toggle('on', x.textContent === n));
+      updateDegLabels();
+      if (heldDeg >= 0) chordOn(heldDeg);
+    });
+    ring.appendChild(b);
+  });
+}
+
+function updateDegLabels() {
+  const rootMidi = NOTE_MIDI[rootNote];
+  ROMANS.forEach((r, i) => {
+    const note = NOTE_NAMES[(rootMidi + IONIAN_IVS[i]) % 12];
+    const el   = degEls[i];
+    if (el) el.querySelector('.dp-note').textContent = note;
+  });
+}
+
+// ── Build degree stack ───────────────────────────────────
+function buildDegStack() {
+  const stack = document.getElementById('degStack');
+  const rootMidi = NOTE_MIDI[rootNote];
+  ROMANS.forEach((r, i) => {
+    const note = NOTE_NAMES[(rootMidi + IONIAN_IVS[i]) % 12];
+    const col  = QCOLOR[AUTO_Q[i]] || '#9090aa';
+    const pad  = document.createElement('div');
+    pad.className = 'deg-pad';
+    pad.innerHTML = `
+      <div class="dp-led" style="background:${col}28;border-color:${col}"></div>
+      <div class="dp-text">
+        <div class="dp-roman">${r}</div>
+        <div class="dp-mood">${MOODS[i]}</div>
+      </div>
+      <div class="dp-note">${note}</div>`;
+    // Mouse
+    pad.addEventListener('mousedown', e => { e.preventDefault(); heldDeg = i; syncDeg(); chordOn(i); });
+    pad.addEventListener('mouseup',   () => { if (heldDeg === i) { heldDeg = -1; syncDeg(); chordOff(); } });
+    pad.addEventListener('mouseleave',() => { if (heldDeg === i) { heldDeg = -1; syncDeg(); chordOff(); } });
+    // Touch
+    pad.addEventListener('touchstart', e => { e.preventDefault(); heldDeg = i; syncDeg(); chordOn(i); }, {passive:false});
+    pad.addEventListener('touchend',   e => { e.preventDefault(); heldDeg = -1; syncDeg(); chordOff(); }, {passive:false});
+    stack.appendChild(pad);
+    degEls.push(pad);
+  });
+}
+
+function syncDeg() {
+  degEls.forEach((el, i) => el.classList.toggle('held', i === heldDeg));
+}
+
+// ── Build quality grid ───────────────────────────────────
+function buildQualGrid() {
+  const grid = document.getElementById('qualGrid');
+  QUALITIES.forEach((q, qi) => {
+    const btn = document.createElement('div');
+    btn.className = 'qual-btn';
+    btn.innerHTML = `
+      <div class="qb-dot" style="background:${q.color}28;border-color:${q.color}"></div>
+      <div class="qb-name" style="color:${q.color}">${q.label}</div>`;
+    btn.addEventListener('click', () => {
+      if ((latchQual === null && q.key === 'auto') || latchQual === q.key) {
+        latchQual = null;
+      } else {
+        latchQual = q.key === 'auto' ? null : q.key;
+      }
+      syncQual();
+      if (heldDeg >= 0) chordOn(heldDeg);
+    });
+    grid.appendChild(btn);
+    qualEls.push(btn);
+  });
+  syncQual();
+}
+
+function syncQual() {
+  qualEls.forEach((el, i) => {
+    const key    = QUALITIES[i].key;
+    const active = latchQual === null ? key === 'auto' : latchQual === key;
+    const color  = QUALITIES[i].color;
+    el.classList.toggle('on', active);
+    el.style.borderColor = active ? color : '';
+    el.style.background  = active ? color + '18' : '';
+  });
+}
+
+// ── Octave ───────────────────────────────────────────────
+document.getElementById('octDn').addEventListener('click', () => {
+  currentOct = Math.max(1, currentOct - 1);
+  document.getElementById('octVal').textContent = currentOct;
+  if (heldDeg >= 0) chordOn(heldDeg);
+});
+document.getElementById('octUp').addEventListener('click', () => {
+  currentOct = Math.min(8, currentOct + 1);
+  document.getElementById('octVal').textContent = currentOct;
+  if (heldDeg >= 0) chordOn(heldDeg);
+});
+
+// ── Extensions ───────────────────────────────────────────
+['ext7','ext9','ext11'].forEach(id => {
+  const btn = document.getElementById(id);
+  const tone = id.replace('ext','');
+  btn.addEventListener('click', () => {
+    if (extraTones.has(tone)) extraTones.delete(tone);
+    else                      extraTones.add(tone);
+    btn.classList.toggle('on', extraTones.has(tone));
+    if (heldDeg >= 0) chordOn(heldDeg);
+  });
+});
+
+buildRootRing();
+buildDegStack();
+buildQualGrid();
+</script>
+</body>
+</html>

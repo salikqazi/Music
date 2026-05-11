@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mockup B · Hold + Tap</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --panel:       #eeeef2;
+  --panel-light: #ffffff;
+  --panel-edge:  #d0d0da;
+  --engrave:     #1a1a2e;
+  --engrave-dim: rgba(26,26,46,0.55);
+  --phos-bg:     #0d1a0d;
+  --phos-fg:     #44ff88;
+  --phos-dim:    #22993a;
+  --border:      rgba(0,0,0,0.12);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--panel);
+  color: var(--engrave);
+  font-family: 'DM Mono', monospace;
+  min-height: 100vh;
+  padding: 12px 10px 24px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+  background-size: 180px;
+}
+
+.nameplate {
+  display: flex; justify-content: space-between; align-items: center;
+  background: var(--panel-light); border: 1px solid var(--border);
+  border-radius: 6px 6px 0 0; padding: 7px 14px;
+}
+.brand { font-size: 9px; letter-spacing: 4px; text-transform: uppercase; opacity: 0.4; font-weight: 500; }
+.tag   { font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: var(--phos-fg);
+         background: var(--phos-bg); padding: 3px 10px; border-radius: 3px; font-family: 'Share Tech Mono'; }
+
+.hint {
+  background: rgba(68,255,136,0.05); border: 1px solid rgba(68,255,136,0.15);
+  border-top: none; padding: 5px 14px;
+  font-size: 8px; letter-spacing: 1.5px; color: var(--engrave-dim); text-transform: uppercase;
+  display: flex; gap: 18px; flex-wrap: wrap;
+}
+.hint em { color: var(--phos-fg); font-style: normal; }
+
+/* Phosphor readout */
+.readout {
+  margin: 8px 0;
+  background: var(--phos-bg);
+  border: 1px solid rgba(68,255,136,0.2);
+  border-radius: 6px;
+  padding: 10px 18px;
+  display: flex;
+  gap: 28px;
+  align-items: center;
+  box-shadow: inset 0 0 14px rgba(0,0,0,0.5), 0 0 8px rgba(68,255,136,0.04);
+}
+.ro-cell { display: flex; flex-direction: column; gap: 2px; }
+.ro-label { font-size: 7px; letter-spacing: 2px; color: var(--phos-dim); text-transform: uppercase; }
+.ro-val {
+  font-size: 18px; font-family: 'Share Tech Mono'; color: var(--phos-fg);
+  letter-spacing: 1px; text-shadow: 0 0 8px rgba(68,255,136,0.4);
+  min-width: 100px;
+}
+.ro-val.small { font-size: 13px; }
+
+/* Two-panel layout */
+.panels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+/* Panel divider label */
+.panel-label {
+  font-size: 7.5px; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--engrave-dim); margin-bottom: 6px;
+  display: flex; align-items: center; gap: 8px;
+}
+.panel-label::after {
+  content: ''; flex: 1; height: 1px;
+  background: linear-gradient(90deg, rgba(26,26,46,0.2), transparent);
+}
+
+/* Degree pads (LEFT) */
+.deg-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+.deg-pad {
+  background: var(--panel-light);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 10px;
+  cursor: pointer;
+  user-select: none; -webkit-user-select: none;
+  transition: background 0.08s, transform 0.06s, border-color 0.08s;
+  display: flex; flex-direction: column; gap: 3px;
+  position: relative;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+}
+.deg-pad:hover   { background: rgba(0,0,0,0.03); }
+.deg-pad.held    { background: rgba(68,255,136,0.12) !important; border-color: rgba(68,255,136,0.5) !important; transform: scale(0.97); }
+.deg-pad.playing { background: rgba(68,255,136,0.22) !important; border-color: var(--phos-fg) !important; }
+.dp-led  { width: 7px; height: 7px; border-radius: 50%; border: 1.5px solid; position: absolute; top: 10px; right: 10px; }
+.dp-roman { font-size: 16px; font-weight: 500; letter-spacing: 0.5px; }
+.dp-mood  { font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: var(--engrave-dim); }
+.dp-note  { font-size: 10px; font-family: 'Share Tech Mono'; color: var(--phos-dim); }
+.dp-kb    { font-size: 8px; font-family: 'Share Tech Mono'; color: #bbb; }
+
+/* Quality pads (RIGHT) */
+.qual-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 5px;
+}
+.qual-pad {
+  background: var(--panel-light);
+  border: 1.5px solid var(--border);
+  border-radius: 7px;
+  padding: 10px 10px;
+  cursor: pointer;
+  user-select: none; -webkit-user-select: none;
+  transition: background 0.08s, transform 0.06s, border-color 0.1s;
+  display: flex; align-items: center; gap: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.qual-pad:hover    { background: rgba(0,0,0,0.03); }
+.qual-pad.latched  { transform: scale(0.97); }
+.qp-dot  { width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid; flex-shrink: 0; }
+.qp-name { font-size: 11px; letter-spacing: 0.5px; font-weight: 500; }
+.qp-kb   { margin-left: auto; font-size: 8px; font-family: 'Share Tech Mono'; color: #bbb;
+           background: var(--panel-edge); border-radius: 3px; padding: 1px 5px; }
+
+/* Nav */
+.nav { display: flex; gap: 8px; justify-content: center; margin-top: 16px; flex-wrap: wrap; }
+.nav a {
+  font-size: 8px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--engrave-dim); text-decoration: none;
+  border: 1px solid var(--border); padding: 5px 14px;
+  border-radius: 4px; background: var(--panel-light);
+}
+.nav a:hover { background: var(--panel-edge); }
+.nav a.on { border-color: rgba(68,255,136,0.45); color: #0a5c20; background: rgba(68,255,136,0.08); }
+</style>
+</head>
+<body>
+
+<div class="nameplate">
+  <span class="brand">Approachable Music</span>
+  <span class="tag">MOCKUP B · HOLD+TAP</span>
+</div>
+<div class="hint">
+  <span><em>LEFT HAND</em> · hold a degree pad</span>
+  <span><em>RIGHT HAND</em> · tap a quality to play · click latches quality on screen</span>
+  <span>no quality held = AUTO (scale quality) · release degree to stop</span>
+</div>
+
+<!-- Phosphor readout -->
+<div class="readout">
+  <div class="ro-cell">
+    <span class="ro-label">Chord</span>
+    <span class="ro-val small" id="roChord">—</span>
+  </div>
+  <div class="ro-cell">
+    <span class="ro-label">Quality</span>
+    <span class="ro-val small" id="roQual">—</span>
+  </div>
+  <div class="ro-cell">
+    <span class="ro-label">Notes</span>
+    <span class="ro-val small" id="roNotes">—</span>
+  </div>
+</div>
+
+<!-- Two-panel body -->
+<div class="panels">
+  <!-- LEFT: degrees -->
+  <div>
+    <div class="panel-label">Left hand · chord degree</div>
+    <div class="deg-grid" id="degGrid"></div>
+  </div>
+  <!-- RIGHT: qualities -->
+  <div>
+    <div class="panel-label">Right hand · chord quality</div>
+    <div class="qual-grid" id="qualGrid"></div>
+  </div>
+</div>
+
+<div class="nav">
+  <a href="grid.html">A · Grid</a>
+  <a class="on" href="hold.html">B · Hold+Tap</a>
+  <a href="split.html">C · Split Panel</a>
+</div>
+
+<script>
+const DEGREES = [
+  { roman:'I',    mood:'HOME',  note:'C', autoQ:'major',     kb:'q' },
+  { roman:'ii',   mood:'YEARN', note:'D', autoQ:'minor',     kb:'w' },
+  { roman:'iii',  mood:'DREAM', note:'E', autoQ:'minor',     kb:'e' },
+  { roman:'IV',   mood:'LIFT',  note:'F', autoQ:'major',     kb:'a' },
+  { roman:'V',    mood:'PULL',  note:'G', autoQ:'dominant',  kb:'s' },
+  { roman:'vi',   mood:'ACHE',  note:'A', autoQ:'minor',     kb:'d' },
+  { roman:'vii°', mood:'EDGE',  note:'B', autoQ:'diminished',kb:'z' },
+];
+
+const QUALITIES = [
+  { key:'auto', label:'AUTO',  kb:'y', color:'#44ff88' },
+  { key:'maj',  label:'maj',   kb:'u', color:'#22c55e' },
+  { key:'min',  label:'min',   kb:'i', color:'#ca8a04' },
+  { key:'7',    label:'7',     kb:'o', color:'#fb923c' },
+  { key:'maj7', label:'maj7',  kb:'p', color:'#4ade80' },
+  { key:'min7', label:'min7',  kb:'h', color:'#d97706' },
+  { key:'sus4', label:'sus4',  kb:'j', color:'#94a3b8' },
+  { key:'add9', label:'add9',  kb:'k', color:'#34d399' },
+  { key:'dim',  label:'dim',   kb:'l', color:'#f97316' },
+  { key:'aug',  label:'aug',   kb:';', color:'#a855f7' },
+];
+
+const QCOLOR_AUTO = {
+  major:'#22c55e', minor:'#ca8a04', dominant:'#fb923c',
+  diminished:'#f97316', augmented:'#a855f7',
+};
+
+const NOTE_NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const MIDI_ROOTS = [60, 62, 64, 65, 67, 69, 71];
+const AUTO_IV    = [[0,4,7],[0,3,7],[0,3,7],[0,4,7],[0,4,7],[0,3,7],[0,3,6]];
+const QUAL_IV    = {
+  maj:[0,4,7], min:[0,3,7], '7':[0,4,7,10],
+  maj7:[0,4,7,11], min7:[0,3,7,10], sus2:[0,2,7],
+  sus4:[0,5,7], add9:[0,4,7,14], dim:[0,3,6], aug:[0,4,8],
+};
+
+// ── Audio ────────────────────────────────────────────────
+let actx = null, anodes = [];
+function ac() {
+  if (!actx) actx = new AudioContext();
+  if (actx.state === 'suspended') actx.resume();
+  return actx;
+}
+function chordOn(deg, qual) {
+  chordOff();
+  const c = ac(), now = c.currentTime;
+  const ivs  = qual === 'auto' ? AUTO_IV[deg] : (QUAL_IV[qual] || AUTO_IV[deg]);
+  const root = MIDI_ROOTS[deg];
+  anodes = ivs.map(iv => {
+    const freq = 440 * Math.pow(2, (root + iv - 69) / 12);
+    const osc  = c.createOscillator();
+    const env  = c.createGain();
+    osc.connect(env); env.connect(c.destination);
+    osc.type = 'triangle'; osc.frequency.value = freq;
+    env.gain.setValueAtTime(0, now);
+    env.gain.linearRampToValueAtTime(0.10, now + 0.025);
+    osc.start(now);
+    return { osc, env };
+  });
+  // Update readout
+  const ivs2   = qual === 'auto' ? AUTO_IV[deg] : (QUAL_IV[qual] || AUTO_IV[deg]);
+  const nnames = ivs2.map(iv => NOTE_NAMES[(root + iv) % 12]).join(' · ');
+  document.getElementById('roChord').textContent  = DEGREES[deg].note + (qual === 'auto' ? '' : qual);
+  document.getElementById('roQual').textContent   = qual === 'auto' ? DEGREES[deg].autoQ : qual;
+  document.getElementById('roNotes').textContent  = nnames;
+}
+function chordOff() {
+  if (!anodes.length) return;
+  const c = ac(), now = c.currentTime;
+  anodes.forEach(({ osc, env }) => {
+    try {
+      env.gain.cancelScheduledValues(now);
+      env.gain.setValueAtTime(env.gain.value, now);
+      env.gain.linearRampToValueAtTime(0, now + 0.5);
+      osc.stop(now + 0.5);
+    } catch(_) {}
+  });
+  anodes = [];
+  document.getElementById('roChord').textContent = '—';
+  document.getElementById('roQual').textContent  = '—';
+  document.getElementById('roNotes').textContent = '—';
+}
+
+// ── State ────────────────────────────────────────────────
+let heldDeg  = -1;          // keyboard-held degree
+let latchQual = null;       // screen-latched quality (null = AUTO)
+let depEls = [], qepEls = [];
+
+function activeQual() { return latchQual !== null ? latchQual : 'auto'; }
+
+function syncDegPad(i) {
+  const el = depEls[i];
+  if (!el) return;
+  if (i === heldDeg) el.classList.add('held');
+  else               el.classList.remove('held');
+}
+function syncQualPad(qi) {
+  const el  = qepEls[qi];
+  const key = QUALITIES[qi].key;
+  if (!el) return;
+  const active = latchQual === null ? key === 'auto' : latchQual === key;
+  if (active) el.classList.add('latched');
+  else        el.classList.remove('latched');
+  el.style.borderColor = active ? QUALITIES[qi].color : '';
+  el.style.background  = active ? QUALITIES[qi].color + '18' : '';
+}
+
+function tryPlay() {
+  if (heldDeg >= 0) chordOn(heldDeg, activeQual());
+  else              chordOff();
+}
+
+// ── Build UI ─────────────────────────────────────────────
+function buildDegGrid() {
+  const grid = document.getElementById('degGrid');
+  DEGREES.forEach((deg, i) => {
+    const pad = document.createElement('div');
+    pad.className = 'deg-pad';
+    const col = QCOLOR_AUTO[deg.autoQ] || '#9090aa';
+    pad.innerHTML = `
+      <div class="dp-led" style="background:${col}28;border-color:${col}"></div>
+      <div class="dp-roman">${deg.roman}</div>
+      <div class="dp-mood">${deg.mood}</div>
+      <div class="dp-note">${deg.note}</div>
+      <div class="dp-kb">${deg.kb.toUpperCase()}</div>`;
+    // Mouse
+    pad.addEventListener('mousedown', e => { e.preventDefault(); heldDeg = i; syncDegPad(i); tryPlay(); });
+    pad.addEventListener('mouseup',   () => { if (heldDeg === i) { heldDeg = -1; syncDegPad(i); chordOff(); } });
+    pad.addEventListener('mouseleave',() => { if (heldDeg === i) { heldDeg = -1; syncDegPad(i); chordOff(); } });
+    // Touch
+    pad.addEventListener('touchstart', e => { e.preventDefault(); heldDeg = i; syncDegPad(i); tryPlay(); }, {passive:false});
+    pad.addEventListener('touchend',   e => { e.preventDefault(); heldDeg = -1; syncDegPad(i); chordOff(); }, {passive:false});
+    grid.appendChild(pad);
+    depEls.push(pad);
+  });
+}
+
+function buildQualGrid() {
+  const grid = document.getElementById('qualGrid');
+  QUALITIES.forEach((q, qi) => {
+    const pad = document.createElement('div');
+    pad.className = 'qual-pad';
+    pad.innerHTML = `
+      <div class="qp-dot" style="background:${q.color}28;border-color:${q.color}"></div>
+      <div class="qp-name" style="color:${q.color}">${q.label}</div>
+      <div class="qp-kb">${q.kb.toUpperCase()}</div>`;
+    pad.addEventListener('click', () => {
+      // Toggle: clicking active quality → reset to AUTO
+      if ((latchQual === null && q.key === 'auto') || latchQual === q.key) {
+        latchQual = null; // reset to auto
+      } else {
+        latchQual = q.key === 'auto' ? null : q.key;
+      }
+      qepEls.forEach((_, i) => syncQualPad(i));
+      if (heldDeg >= 0) tryPlay();
+    });
+    grid.appendChild(pad);
+    qepEls.push(pad);
+  });
+  syncQualPad(0); // highlight AUTO initially
+}
+
+// ── Keyboard ─────────────────────────────────────────────
+const DEG_KB  = Object.fromEntries(DEGREES.map((d,i)  => [d.kb, i]));
+const QUAL_KB = Object.fromEntries(QUALITIES.map((q,i) => [q.kb, i]));
+
+window.addEventListener('keydown', e => {
+  if (e.repeat) return;
+  const k = e.key === ';' ? ';' : e.key.toLowerCase();
+  if (k in DEG_KB) {
+    e.preventDefault();
+    heldDeg = DEG_KB[k];
+    depEls.forEach((_, i) => syncDegPad(i));
+    tryPlay();
+  }
+  if (k in QUAL_KB) {
+    e.preventDefault();
+    const qi  = QUAL_KB[k];
+    const key = QUALITIES[qi].key;
+    latchQual = key === 'auto' ? null : key;
+    qepEls.forEach((_, i) => syncQualPad(i));
+    if (heldDeg >= 0) tryPlay();
+  }
+});
+
+window.addEventListener('keyup', e => {
+  const k = e.key === ';' ? ';' : e.key.toLowerCase();
+  if (k in DEG_KB && heldDeg === DEG_KB[k]) {
+    heldDeg = -1;
+    depEls.forEach((_, i) => syncDegPad(i));
+    chordOff();
+  }
+});
+
+buildDegGrid();
+buildQualGrid();
+syncQualPad(0);
+</script>
+</body>
+</html>

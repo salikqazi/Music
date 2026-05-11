@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Approachable Music</title>
+<link rel="stylesheet" href="style.css?v=47">
+</head>
+<body>
+
+<!-- ── Header Strip ──────────────────────────────────────────────── -->
+<div class="header-strip">
+
+  <!-- Brand + Info + Teach (compact left column) -->
+  <div class="hs-left">
+    <span class="brand-name">Approachable<br>Music</span>
+    <div class="hs-pills">
+      <button class="info-mode-btn" id="infoModeBtn" onclick="toggleInfoMode()" title="What does each control do?">
+        <span class="info-btn-pip"></span>Info
+      </button>
+      <button class="teach-mode-btn" id="teachModeBtn" onclick="toggleTeachMode()" title="Guided music theory lessons">
+        <span class="teach-btn-pip"></span>Teach
+      </button>
+    </div>
+  </div>
+
+  <div class="hs-vdiv"></div>
+
+  <!-- Root / Scale display — stacked, fixed width, never shifts -->
+  <div class="hs-display">
+    <div class="phosphor-display">
+      <div class="display-cell">
+        <span class="display-label">Root</span>
+        <span class="display-value" id="rootLabel">C</span>
+      </div>
+      <div class="display-cell">
+        <span class="display-label">Scale</span>
+        <span class="display-value small" id="scaleLabel" data-info="scale_Ionian">Ionian (Major)</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="hs-vdiv"></div>
+
+  <!-- Mode toggle — vertical Chord / Locked / Free -->
+  <div class="hs-mode">
+    <span class="engrave-label">Mode</span>
+    <div class="toggle-switch toggle-vertical" id="modeToggle">
+      <div class="toggle-option active" id="chordOpt" onclick="setMode('chord')">Chord</div>
+      <div class="toggle-option"        id="scaleOpt" onclick="setMode('scale')">Locked</div>
+      <div class="toggle-option"        id="freeOpt"  onclick="setMode('free')">Free</div>
+    </div>
+  </div>
+
+  <div class="hs-vdiv"></div>
+
+  <!-- Octave + Master — side by side, compact knobs -->
+  <div class="hs-params">
+    <div class="hs-param-item">
+      <span class="engrave-label">Oct</span>
+      <div id="octaveKnob" class="knob-slot" data-info="octave"></div>
+    </div>
+    <div class="hs-param-item">
+      <span class="engrave-label">Mstr</span>
+      <div id="masterVolKnob" class="knob-slot" data-info="master"></div>
+    </div>
+  </div>
+
+  <div class="hs-vdiv"></div>
+
+  <!-- Waveform — fills remaining width -->
+  <div class="hs-wave">
+    <canvas id="waveformCanvas" class="wave-strip"></canvas>
+  </div>
+
+</div><!-- /header-strip -->
+
+
+
+<!-- ── Patches Strip (above chord keys) ─────────────────────────── -->
+<div class="patches-strip" id="patchesStrip">
+  <div class="patches-strip-summary" onclick="togglePatchesStrip()">
+    <span class="engrave-label">Sound</span>
+    <span id="patchesSummaryName">Piano</span>
+    <span id="patchesSummaryChevron">▶</span>
+  </div>
+  <div id="patchesStripBody" style="display:none">
+  <div class="patches-strip-bank" id="patchBank"></div>
+  <div class="patches-strip-user">
+    <span class="engrave-label patch-user-label">User</span>
+    <div class="patch-user-slots" id="userPatchRow"></div>
+    <button class="patch-save-btn" onclick="promptSavePatch()">+ Save</button>
+  </div>
+  </div><!-- /patchesStripBody -->
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     PLAYING SURFACE  ·  circle sidebar + two-hand split
+════════════════════════════════════════════════════════ -->
+<div class="playing-surface">
+
+  <!-- ── Circle of Fifths sidebar ─────────────────────── -->
+  <div class="circle-panel">
+    <span class="engrave-label circle-panel-desktop-label">Tune</span>
+    <div class="circle-panel-summary" id="circlePanelSummary">
+      <span class="circle-summary-text" id="circleSummaryText">C · Ionian</span>
+      <div class="mob-mode-toggle">
+        <button class="mob-mode-btn active" id="mobChordBtn"  onclick="setMode('chord')">Chord</button>
+        <button class="mob-mode-btn"        id="mobScaleBtn"  onclick="setMode('scale')">Locked</button>
+        <button class="mob-mode-btn"        id="mobFreeBtn"   onclick="setMode('free')">Free</button>
+      </div>
+    </div>
+    <div id="circlePanelBody">
+      <canvas id="circleCanvas" width="136" height="136"></canvas>
+      <!-- Mobile-only: dropdown selectors replace the drum-roller canvas -->
+      <div id="mobileCircleSelects" class="mobile-circle-selects">
+        <div class="mob-sel-group">
+          <label class="mob-sel-label">Key</label>
+          <select id="mobileRootSelect" class="mob-select"></select>
+        </div>
+        <div class="mob-sel-group">
+          <label class="mob-sel-label">Scale</label>
+          <select id="mobileScaleSelect" class="mob-select"></select>
+        </div>
+      </div>
+      <div class="rel-display" id="relDisplay">
+        <span class="rel-row"><span class="rel-sym">▲</span><span id="relMaj">C</span><span class="rel-lbl">maj</span></span>
+        <span class="rel-row"><span class="rel-sym">▼</span><span id="relMin">A</span><span class="rel-lbl">min</span></span>
+      </div>
+      <!-- Inline chord inspector — populated by chord-inspector.js -->
+      <div id="circleChordInfo" class="cci" style="display:none">
+        <div class="cci-divider"></div>
+        <div class="cci-name-row">
+          <span class="cci-name"></span>
+          <span class="cci-deg"></span>
+        </div>
+        <div class="cci-lbl">PIANO</div>
+        <div class="cci-piano"></div>
+        <div class="cci-lbl">GUITAR</div>
+        <div class="cci-guitars">
+          <div class="cci-guitar"></div>
+          <div class="cci-guitar"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── LEFT ZONE: chord degree ─────────────────────── -->
+  <div class="play-left" id="playLeft">
+
+    <div class="zone-banner zone-banner-left">
+      <span class="zone-arrow">←</span>
+      <span class="zone-name">Left Hand</span>
+      <span class="zone-sub">chord degree <span class="kbd-hint">&nbsp;· &nbsp;1 2 3 &nbsp;Q W E &nbsp;A S D &nbsp;Z X</span></span>
+    </div>
+
+    <div class="panel-divider">
+      <span class="engrave-label">Scale Chords<span class="kbd-hint" id="scaleRowHint"> · 1 2 3 4 · Q W E R</span></span>
+    </div>
+    <div class="chord-section">
+      <div class="keys-row" id="scaleRow"></div>
+    </div>
+
+    <div class="panel-divider" id="oct2Divider" style="display:none">
+      <span class="engrave-label">Octave 2<span class="kbd-hint"> · A S D F Z X C V</span></span>
+    </div>
+    <div class="chord-section" id="oct2Section" style="display:none">
+      <div class="keys-row" id="oct2Row"></div>
+    </div>
+
+    <div class="panel-divider" id="extDivider" onclick="toggleExtensions()" style="cursor:pointer">
+      <span class="engrave-label">Extensions<span class="kbd-hint"> · A S D F</span></span>
+      <span id="extDividerChevron" style="font-size:10px;color:var(--engrave-dim);margin-left:auto;padding-right:8px">▶</span>
+    </div>
+    <div class="ext-section" id="extSection" style="display:none">
+      <div class="ext-oct-col">
+        <button class="ext-oct-btn" id="modOctUp">▲</button>
+        <button class="ext-oct-btn" id="modOctDown">▼</button>
+      </div>
+      <div class="keys-row" id="extRow"></div>
+    </div>
+
+  </div><!-- /play-left -->
+
+  <!-- ── RIGHT ZONE: chord quality ───────────────────── -->
+  <div class="play-right">
+
+    <div class="zone-banner zone-banner-right">
+      <span class="zone-sub">chord quality</span>
+      <span class="zone-name">Right Hand</span>
+      <span class="zone-arrow">→</span>
+    </div>
+
+    <div class="quality-panel" id="qualityPanel"></div>
+
+    <div class="quick-flavours-row" id="quickFlavoursRow"></div>
+
+    <div class="qual-readout">
+      <span class="qual-readout-label">Holding</span>
+      <span class="qual-readout-val" id="qualReadout">AUTO</span>
+    </div>
+
+  </div><!-- /play-right -->
+
+</div><!-- /playing-surface -->
+
+<!-- ══════════════════════════════════════════════════════
+     VOICE  —  single flat row of all knobs
+══════════════════════════════════════════════════════ -->
+<div class="vpc-panel">
+  <div class="vpc-panel-header" onclick="toggleVpcPanel()">
+    <span class="engrave-label">Voice</span>
+    <span id="vpcPanelChevron">▶</span>
+  </div>
+  <div class="vpc-voice-flat" id="vpcVoiceFlat" style="display:none">
+
+    <div class="vpc-group-inline">
+      <span class="vpc-gi-lbl vpc-env-lbl">Env</span>
+      <div id="atkKnob"  class="knob-slot" data-info="atk"></div>
+      <div id="dcyKnob"  class="knob-slot" data-info="dcy"></div>
+      <div id="susKnob"  class="knob-slot" data-info="sus"></div>
+      <div id="relKnob"  class="knob-slot" data-info="rel"></div>
+      <canvas class="grp-mini-canvas" id="envMini"></canvas>
+    </div>
+
+    <div class="vpc-gi-div"></div>
+
+    <div class="vpc-group-inline">
+      <span class="vpc-gi-lbl vpc-flt-lbl">Flt</span>
+      <div id="cutKnob"  class="knob-slot" data-info="cut"></div>
+      <div id="resKnob"  class="knob-slot" data-info="res"></div>
+      <div id="warmKnob" class="knob-slot" data-info="warm"></div>
+      <div id="revKnob"  class="knob-slot" data-info="rev"></div>
+      <canvas class="grp-mini-canvas" id="fltMini"></canvas>
+    </div>
+
+    <div class="vpc-gi-div"></div>
+
+    <div class="vpc-group-inline">
+      <span class="vpc-gi-lbl vpc-chr-lbl">Chr</span>
+      <div id="driveKnob" class="knob-slot" data-info="drive"></div>
+      <div id="driftKnob" class="knob-slot" data-info="drift"></div>
+      <div id="subKnob"   class="knob-slot" data-info="sub"></div>
+      <div id="widthKnob" class="knob-slot" data-info="width"></div>
+      <div id="sweepKnob" class="knob-slot" data-info="sweep"></div>
+      <canvas class="grp-mini-canvas" id="chrMini"></canvas>
+    </div>
+
+    <div class="vpc-gi-div"></div>
+
+    <div class="vpc-group-inline">
+      <span class="vpc-gi-lbl vpc-pb-lbl">Play</span>
+      <div id="strumKnob"    class="knob-slot" data-info="strum"></div>
+      <div id="humanizeKnob" class="knob-slot" data-info="humanize"></div>
+      <div id="glideKnob"    class="knob-slot" data-info="glide"></div>
+      <canvas class="grp-mini-canvas" id="playMini"></canvas>
+      <div class="vpc-playback-pills">
+        <button class="led-pill-btn pedal-btn" id="holdToggle" onclick="toggleHold()" data-info="hold" title="Sustain Pedal — held notes ring through chord changes">
+          <span class="led-pip" id="holdPip"></span>⊥ Pedal
+        </button>
+        <button class="led-pill-btn" id="latchToggle" onclick="toggleLatch()" data-info="latch" title="Key Latch — tap once to hold a key, tap again to release">
+          <span class="led-pip" id="latchPip"></span>Latch
+        </button>
+        <button class="led-pill-btn" id="legatoToggle" onclick="toggleLegato()" data-info="legato">
+          <span class="led-pip" id="legatoPip"></span>Legato
+        </button>
+        <button class="led-pill-btn" id="monoToggle" onclick="toggleMono()" data-info="mono">
+          <span class="led-pip" id="monoPip"></span>Mono
+        </button>
+      </div>
+    </div>
+
+    <!-- Hidden preset containers — kept for JS compatibility -->
+    <div class="vpc-sec-presets vpc-env-presets" id="envPresets" style="display:none"></div>
+    <div class="vpc-sec-presets vpc-flt-presets" id="fltPresets" style="display:none"></div>
+    <div class="vpc-sec-presets vpc-chr-presets" id="chrPresets" style="display:none"></div>
+
+  </div>
+</div><!-- /vpc-panel -->
+
+<!-- ── Looper ─────────────────────────────────────────────── -->
+<div class="panel-divider looper-toggle" id="looperToggle" onclick="looperTogglePanel()">
+  <span class="engrave-label">Looper</span>
+  <span class="looper-chevron" id="looperChevron">▶</span>
+</div>
+<div class="looper-section" id="looperSection" style="display:none">
+
+  <div class="looper-editor">
+    <canvas id="looperCanvas" class="looper-canvas"></canvas>
+  </div>
+
+  <div class="looper-bottom-bar">
+
+    <!-- Record transport -->
+    <div class="lbb-group">
+      <button id="looperArmBtn" class="looper-btn looper-btn-arm" onclick="looperArm()" title="Arm: recording starts on first note played">
+        <span class="led-pip" id="looperArmPip"></span>ARM
+      </button>
+      <button id="looperRecBtn" class="looper-btn looper-btn-rec" onclick="looperRecord()" title="Record immediately">
+        <span class="led-pip" id="looperRecPip"></span>REC
+      </button>
+      <button class="looper-btn" onclick="looperStop()" title="Stop">&#9632;</button>
+    </div>
+
+    <div class="lbb-sep"></div>
+
+    <!-- Play mode -->
+    <div class="lbb-group">
+      <span class="lbb-label">Play</span>
+      <button id="looperPlayInputBtn" class="looper-btn" onclick="looperPlayMode('input')"
+              title="INPUT: re-triggers events through current instrument — switch patches freely">
+        <span class="led-pip" id="looperPlayInputPip"></span>INPUT
+      </button>
+      <button id="looperPlayAudioBtn" class="looper-btn" onclick="looperPlayMode('audio')"
+              title="AUDIO: plays recorded audio — instrument-independent">
+        <span class="led-pip" id="looperPlayAudioPip"></span>AUDIO
+      </button>
+    </div>
+
+    <div class="lbb-sep"></div>
+
+    <!-- Edit tools -->
+    <div class="lbb-group">
+      <span class="lbb-label">Edit</span>
+      <button class="looper-tool-btn active" data-tool="trim"  onclick="looperSetTool('trim')"  title="Trim: drag green handles to set loop in/out points">TRM</button>
+      <button class="looper-tool-btn"        data-tool="shift" onclick="looperSetTool('shift')" title="Shift: drag waveform to fix event timing offset">SHF</button>
+      <button class="looper-tool-btn"        data-tool="cut"   onclick="looperSetTool('cut')"   title="Cut: drag to select and delete a region (snaps to grid when Snap is active)">CUT</button>
+    </div>
+
+    <div class="lbb-sep"></div>
+
+    <!-- Snap -->
+    <div class="lbb-group">
+      <span class="lbb-label">Snap</span>
+      <button class="lbb-snap-btn active" data-snap="off"  onclick="looperSetSnap('off')"  title="No snap — free edit">OFF</button>
+      <button class="lbb-snap-btn"        data-snap="bar"  onclick="looperSetSnap('bar')"  title="Snap to bar">BAR</button>
+      <button class="lbb-snap-btn"        data-snap="beat" onclick="looperSetSnap('beat')" title="Snap to beat">BEAT</button>
+      <button class="lbb-snap-btn"        data-snap="half" onclick="looperSetSnap('half')" title="Snap to half-beat">½</button>
+    </div>
+
+    <div class="lbb-sep"></div>
+
+    <!-- Quantize / Grid -->
+    <div class="lbb-group">
+      <span class="lbb-label">Grid</span>
+      <input id="looperBpmInput" class="looper-bpm-input" type="number" min="40" max="300" value="120" title="BPM">
+      <select id="looperTimeSig" class="looper-timesig-sel" title="Time signature">
+        <option value="4">4/4</option>
+        <option value="3">3/4</option>
+        <option value="6">6/8</option>
+        <option value="2">2/4</option>
+      </select>
+      <button class="looper-btn" onclick="looperQuantize()" title="Snap loop to nearest bar boundary">QNTZ</button>
+    </div>
+
+    <div class="lbb-sep"></div>
+
+    <!-- Utility -->
+    <div class="lbb-group">
+      <button id="looperUndoBtn" class="looper-btn" onclick="looperUndo()" disabled title="Undo last edit">&#8617;</button>
+      <button class="looper-btn looper-btn-clear" onclick="looperClear()" title="Clear loop">CLR</button>
+    </div>
+
+    <div class="lbb-push"></div>
+    <div class="looper-status" id="looperStatus">IDLE</div>
+
+  </div><!-- /looper-bottom-bar -->
+
+</div><!-- /looper-section -->
+
+<!-- ── Song Progressions ──────────────────────────────────── -->
+<div class="panel-divider songs-toggle" id="songsToggle" onclick="toggleSongs()">
+  <span class="engrave-label">Song Progressions</span>
+  <span class="songs-chevron" id="songsChevron">▶</span>
+</div>
+<div class="songs-section" id="songsSection" style="display:none">
+
+  <div class="songs-filter-row">
+    <span class="engrave-label">Genre</span>
+    <div id="songsGenreFilter" class="songs-genre-strip"></div>
+    <div class="songs-filter-sep"></div>
+    <span class="engrave-label">BPM</span>
+    <div id="songsBpmKnob" class="knob-slot"></div>
+  </div>
+
+  <div class="songs-list" id="songsList"></div>
+
+  <div class="songs-player" id="songsPlayer" style="display:none">
+    <div class="songs-player-info">
+      <span class="songs-player-title" id="songsPlayerTitle"></span>
+      <span class="songs-player-artist" id="songsPlayerArtist"></span>
+    </div>
+    <div class="songs-player-row">
+      <div class="songs-player-chords" id="songsPlayerChords"></div>
+      <div class="songs-player-controls">
+        <button class="songs-btn songs-btn-play" id="songsPlayBtn">&#9654; PLAY</button>
+        <button class="songs-btn songs-btn-stop" id="songsStopBtn">&#9632; STOP</button>
+      </div>
+    </div>
+    <div class="songs-mode-warning" id="songsModeWarning" style="display:none"></div>
+  </div>
+
+</div>
+
+<!-- ── Save Snapshot Modal ────────────────────────────────── -->
+<div class="save-modal" id="snapModal" style="display:none" onclick="if(event.target===this)closeSnapModal()">
+  <div class="save-modal-panel">
+    <div class="save-modal-header">Save Snapshot</div>
+    <input class="save-modal-input" id="snapModalInput" type="text" maxlength="28"
+           placeholder="SNAPSHOT NAME"
+           onkeydown="if(event.key==='Enter')confirmSaveSnapshot();if(event.key==='Escape')closeSnapModal();">
+    <div class="save-modal-actions">
+      <button class="save-modal-btn cancel" onclick="closeSnapModal()">Cancel</button>
+      <button class="save-modal-btn confirm" onclick="confirmSaveSnapshot()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Save Patch Modal ───────────────────────────────────── -->
+<div class="save-modal" id="saveModal" style="display:none" onclick="if(event.target===this)closeSaveModal()">
+  <div class="save-modal-panel">
+    <div class="save-modal-header">Save Patch</div>
+    <input class="save-modal-input" id="saveModalInput" type="text" maxlength="20"
+           placeholder="PATCH NAME"
+           onkeydown="if(event.key==='Enter')confirmSavePatch();if(event.key==='Escape')closeSaveModal();">
+    <div class="save-modal-actions">
+      <button class="save-modal-btn cancel" onclick="closeSaveModal()">Cancel</button>
+      <button class="save-modal-btn confirm" onclick="confirmSavePatch()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/music-theory.js?v=38"></script>
+<script src="js/audio.js?v=47"></script>
+<script src="js/circle.js?v=39"></script>
+<script src="js/visualizers.js?v=47"></script>
+<script src="js/knob.js?v=38"></script>
+<script src="js/envelope-viewer.js?v=44"></script>
+<script src="js/app.js?v=51"></script>
+<script src="js/looper.js?v=38"></script>
+<script src="js/songs.js?v=38"></script>
+<script src="js/info.js?v=38"></script>
+<script src="js/teach.js?v=38"></script>
+<script src="js/chord-inspector.js?v=38"></script>
+</body>
+</html>

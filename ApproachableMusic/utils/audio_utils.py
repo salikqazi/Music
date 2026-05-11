@@ -69,21 +69,28 @@ def generate_waveform(frequency, duration, sample_rate, waveform_type='Sine', vo
         else:
             sound = np.sin(2 * np.pi * frequency * sound_t)  # Default to sine
         
-        # Apply envelope
-        envelope = np.ones_like(sound)
-        fade_in_samples = int(fade_in * sample_rate)
+        # Build fade-in and fade-out envelopes independently then MULTIPLY them.
+        # If applied sequentially (one overwrites the other) the later envelope
+        # restores amplitude to 1.0 mid-curve, causing a sudden jump == pop.
+        # Multiplying keeps both curves active throughout, so the result is
+        # always the product of two smooth 0→1 or 1→0 curves: no discontinuity.
+        fade_in_samples  = int(fade_in  * sample_rate)
         fade_out_samples = int(fade_out * sample_rate)
-        
-        # Apply fade in (using half-cosine for smoother transition)
+
+        envelope = np.ones(sound_samples)
+
         if fade_in_samples > 0 and fade_in_samples < sound_samples:
-            fade_in_curve = 0.5 * (1 - np.cos(np.linspace(0, np.pi, fade_in_samples)))
-            envelope[:fade_in_samples] = fade_in_curve
-        
-        # Apply fade out (using half-cosine for smoother transition)
+            fade_in_env = np.ones(sound_samples)
+            fade_in_env[:fade_in_samples] = 0.5 * (1 - np.cos(
+                np.linspace(0, np.pi, fade_in_samples)))
+            envelope *= fade_in_env
+
         if fade_out_samples > 0 and fade_out_samples < sound_samples:
-            fade_out_curve = 0.5 * (1 + np.cos(np.linspace(0, np.pi, fade_out_samples)))
-            envelope[sound_samples - fade_out_samples:] = fade_out_curve
-        
+            fade_out_env = np.ones(sound_samples)
+            fade_out_env[sound_samples - fade_out_samples:] = 0.5 * (1 + np.cos(
+                np.linspace(0, np.pi, fade_out_samples)))
+            envelope *= fade_out_env
+
         # Apply envelope to sound
         sound = sound * envelope
         
